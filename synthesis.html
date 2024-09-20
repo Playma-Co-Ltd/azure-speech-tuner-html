@@ -76,7 +76,7 @@
         <td></td>
         <td><h1 style="font-weight:500;">Microsoft Cognitive Services Speech SDK JavaScript Sample for Speech Synthesis</h1></td>
       </tr>
-      <tr>
+      <tr style="display:none">
         <td align="right">
           <label for="subscriptionKey">
             <a href="https://docs.microsoft.com/azure/cognitive-services/speech-service/get-started"
@@ -84,14 +84,14 @@
                target="_blank">Subscription Key</a>
           </label>
         </td>
-        <td><input id="subscriptionKey" type="text" size="40" placeholder="YourSubscriptionKey"></td>
+        <td><input id="subscriptionKey" type="text" size="40" placeholder="YourSubscriptionKey" value="b912804b14244dbcb93d08f9e4f015d6" disabled="disabled"></td>
       </tr>
-      <tr>
+      <tr style="display:none">
         <td align="right"><label for="regionOptions">Region</label></td>
         <td>
 <!--          see https://aka.ms/csspeech/region for more details-->
-          <select id="regionOptions">
-            <option value="westus" selected="selected">West US</option>
+          <select id="regionOptions" disabled="disabled">
+            <option value="westus" >West US</option>
             <option value="westus2">West US2</option>
             <option value="eastus">East US</option>
             <option value="eastus2">East US2</option>
@@ -102,7 +102,7 @@
             <option value="canadacentral">Canada Central</option>
             <option value="brazilsouth">Brazil South</option>
             <option value="eastasia">East Asia</option>
-            <option value="southeastasia">South East Asia</option>
+            <option value="southeastasia" selected="selected">South East Asia</option>
             <option value="australiaeast">Australia East</option>
             <option value="centralindia">Central India</option>
             <option value="japaneast">Japan East</option>
@@ -121,13 +121,14 @@
       <tr>
         <td align="right"><label for="voiceOptions">Voice</label></td>
         <td>
-          <button id="updateVoiceListButton">Update Voice List</button>
+          <button id="updateVoiceListButton">
+            Update Voice List</button>
           <select id="voiceOptions" disabled>
             <option>Please update voice list first.</option>
           </select>
         </td>
       </tr>
-      <tr>
+      <tr style="display:none">
         <td align="right"><label for="formatOptions">Format</label></td>
         <td>
           <select id="formatOptions">
@@ -136,7 +137,7 @@
           (riff pcm, mp3, ogg and webm formats are supported for playback.)
         </td>
       </tr>
-      <tr>
+      <tr style="display:none">
         <td align="right"><label for="isSSML">Is SSML</label><br></td>
         <td>
           <input type="checkbox" id="isSSML" name="isSSML" value="ssml">
@@ -162,18 +163,18 @@
         <td align="right" valign="top"><label for="resultsDiv">Results</label></td>
         <td><textarea id="resultsDiv" readonly style="display: inline-block;width:500px;height:50px"></textarea></td>
       </tr>
-      <tr>
+      <tr style="display:none">
         <td align="right" valign="top"><label for="talkingHeadDiv">
           <a href="https://docs.microsoft.com/azure/cognitive-services/speech-service/how-to-speech-synthesis-viseme?pivots=programming-language-javascript"
             rel="noreferrer noopener"
             target="_blank">Talking Head</a></label></td>
         <td><div id="talkingHeadDiv" style="display: inline-block;width:800px;"></div></td>
       </tr>
-      <tr>
+      <tr style="display:none">
         <td align="right" valign="top"><label for="eventsDiv">Events</label></td>
         <td><textarea id="eventsDiv" readonly style="display: inline-block;width:500px;height:200px"></textarea></td>
       </tr>
-      <tr>
+      <tr style="display:none">
         <td align="right" valign="top"><label for="highlightDiv">Highlight</label></td>
         <td><div id="highlightDiv" style="display: inline-block;width:800px;"></div></td>
       </tr>
@@ -571,6 +572,8 @@
         if (typeof RequestAuthorizationToken === "function") {
           RequestAuthorizationToken();
         }
+
+        updateVoiceListButton.click();
       });
     });
   </script>
