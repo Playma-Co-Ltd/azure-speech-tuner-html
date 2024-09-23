@@ -613,7 +613,14 @@
         downloadButton.disabled = true;
 
         if (isSsml.checked) {
-          synthesizer.speakSsmlAsync(generateSSML(), function() {}, function() {});
+          synthesizer.speakSsmlAsync(generateSSML(), function(result) {
+            // Handle the success case
+            console.log("Synthesis completed successfully:", result);
+          },
+          function(error) {
+            // Handle the error case  
+            console.error("Synthesis failed:", error);
+          });
         } else {
           synthesizer.speakTextAsync(synthesisText.value);
         }
