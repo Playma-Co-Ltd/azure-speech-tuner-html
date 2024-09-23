@@ -137,17 +137,29 @@
           (riff pcm, mp3, ogg and webm formats are supported for playback.)
         </td>
       </tr>
-      <tr style="display:none">
+      <tr >
         <td align="right"><label for="isSSML">Is SSML</label><br></td>
         <td>
-          <input type="checkbox" id="isSSML" name="isSSML" value="ssml" checked="checked">
+          <input type="checkbox" id="isSSML" name="isSSML" value="ssml" checked="checked" onchange="onSSMLChanged()">
         </td>
       </tr>
       <tr>
         <td align="right"><label for="synthesisText">Text</label></td>
         <td>
           <textarea id="synthesisText" style="display: inline-block;width:500px;height:100px"
-                 placeholder="Input text or ssml for synthesis."></textarea>
+                 placeholder="input text for synthesis. "></textarea>
+        </td>
+      </tr>
+      <tr id="rateRow">
+        <td align="right"><label for="synthesisOptions">Rate</label></td>
+        <td>
+          <input id="rate" type="text" placeholder="" style="width: 60px" value="+1%"> Any percentage with % (can be negative), e.g., +5%, -10%
+        </td>
+      </tr>
+      <tr id="pitchRow">
+        <td align="right">Pitch</td>
+        <td>
+          <input id="pitch" type="text" placeholder="" style="width: 60px" value="+1%"> Any percentage with % (can be negative), e.g., +5%, -10%
         </td>
       </tr>
       <tr>
@@ -260,6 +272,17 @@
       }
     }
 
+    function onSSMLChanged() {
+      if (isSsml.checked) {
+        document.getElementById('pitchRow').style.display = '';
+        document.getElementById('rateRow').style.display = '';
+      } else {
+        document.getElementById('pitchRow').style.display = 'none';
+        document.getElementById('rateRow').style.display = 'none';
+      }
+    }
+    
+
     document.addEventListener("DOMContentLoaded", function () {
       startSynthesisAsyncButton = document.getElementById("startSynthesisAsyncButton");
       updateVoiceListButton = document.getElementById("updateVoiceListButton");
@@ -274,6 +297,35 @@
       isSsml = document.getElementById("isSSML");
       talkingHeadDiv = document.getElementById("talkingHeadDiv");
       highlightDiv = document.getElementById("highlightDiv");
+      rate  = document.getElementById("rate");
+      pitch = document.getElementById("pitch");
+
+      function buildXml() {
+        const xmlDoc = document.implementation.createDocument("", "speak", null);
+        xmlDoc.getElementsByTagName('speak')[0].setAttribute('version', '1.0')
+        xmlDoc.getElementsByTagName('speak')[0].setAttribute('xmlns', 'https://www.w3.org/2001/10/synthesis');
+        xmlDoc.getElementsByTagName('speak')[0].setAttribute('xml:lang', 'en-US');
+
+        const voice = xmlDoc.createElement('voice');
+        voice.setAttribute('name', voiceOptions.value);
+
+        if (rate.value || pitch.value) {
+          const prosody = xmlDoc.createElement('prosody');
+          rate.value && prosody.setAttribute('rate', rate.value);
+          pitch.value && prosody.setAttribute('pitch', pitch.value);
+          prosody.textContent = synthesisText.value;
+          voice.appendChild(prosody);
+        } else {
+          voice.textContent = synthesisText.value;
+        }
+
+        xmlDoc.getElementsByTagName('speak')[0].appendChild(voice);
+
+        let xmlString = new XMLSerializer()
+            .serializeToString(xmlDoc);
+        console.log(xmlString)
+        return xmlString;
+      }
 
       setInterval(function () {
         if (player !== undefined) {
@@ -475,7 +527,7 @@
         downloadButton.disabled = true;
 
         if (isSsml.checked) {
-          synthesizer.speakSsmlAsync(synthesisText.value,
+          synthesizer.speakSsmlAsync(buildXml(),
                   complete_cb,
                   err_cb);
         } else {
@@ -548,7 +600,7 @@
         downloadButton.disabled = true;
 
         if (isSsml.checked) {
-          synthesizer.speakSsmlAsync(synthesisText.value);
+          synthesizer.speakSsmlAsync(buildXml());
         } else {
           synthesizer.speakTextAsync(synthesisText.value);
         }
