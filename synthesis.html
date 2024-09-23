@@ -137,7 +137,7 @@
           (riff pcm, mp3, ogg and webm formats are supported for playback.)
         </td>
       </tr>
-      <tr >
+      <tr>
         <td align="right"><label for="isSSML">Is SSML</label><br></td>
         <td>
           <input type="checkbox" id="isSSML" name="isSSML" value="ssml" checked="checked" onchange="onSSMLChanged()">
@@ -146,8 +146,7 @@
       <tr>
         <td align="right"><label for="synthesisText">Text</label></td>
         <td>
-          <textarea id="synthesisText" style="display: inline-block;width:500px;height:100px"
-                 placeholder="input text for synthesis. "></textarea>
+          <textarea id="synthesisText" style="display: inline-block;width:500px;height:100px" placeholder="input text for synthesis. "></textarea>
         </td>
       </tr>
       <tr id="rateRow">
@@ -273,7 +272,8 @@
     }
 
     function onSSMLChanged() {
-      if (isSsml.checked) {
+      let isSsmlElement = document.getElementById("isSSML");
+      if (isSsmlElement.checked) {
         document.getElementById('pitchRow').style.display = '';
         document.getElementById('rateRow').style.display = '';
       } else {
@@ -284,6 +284,8 @@
     
 
     document.addEventListener("DOMContentLoaded", function () {
+      onSSMLChanged() 
+
       startSynthesisAsyncButton = document.getElementById("startSynthesisAsyncButton");
       updateVoiceListButton = document.getElementById("updateVoiceListButton");
       pauseButton = document.getElementById("pauseButton");
@@ -297,22 +299,33 @@
       isSsml = document.getElementById("isSSML");
       talkingHeadDiv = document.getElementById("talkingHeadDiv");
       highlightDiv = document.getElementById("highlightDiv");
-      rate  = document.getElementById("rate");
-      pitch = document.getElementById("pitch");
 
-      function buildXml() {
+      function generateSSML() {
+        const rate  = document.getElementById("rate");
+        const pitch = document.getElementById("pitch");
+
         const xmlDoc = document.implementation.createDocument("", "speak", null);
-        xmlDoc.getElementsByTagName('speak')[0].setAttribute('version', '1.0')
-        xmlDoc.getElementsByTagName('speak')[0].setAttribute('xmlns', 'https://www.w3.org/2001/10/synthesis');
-        xmlDoc.getElementsByTagName('speak')[0].setAttribute('xml:lang', 'en-US');
+        xmlDoc.documentElement.setAttribute('version', '1.0');
+        xmlDoc.documentElement.setAttribute('xmlns', 'https://www.w3.org/2001/10/synthesis');
+        xmlDoc.documentElement.setAttribute('xml:lang', 'en-US');
+        
 
         const voice = xmlDoc.createElement('voice');
         voice.setAttribute('name', voiceOptions.value);
 
-        if (rate.value || pitch.value) {
+        let rateValue = rate.value;
+        let pitchValue = pitch.value;
+
+        if (rateValue || pitchValue) {
+          if (!rateValue.endsWith('%')) {
+            rateValue = rateValue + '%';
+          }
+          if (!pitchValue.endsWith('%')) {
+            pitchValue = pitchValue + '%';
+          }
           const prosody = xmlDoc.createElement('prosody');
-          rate.value && prosody.setAttribute('rate', rate.value);
-          pitch.value && prosody.setAttribute('pitch', pitch.value);
+          rate.value && prosody.setAttribute('rate', rateValue);
+          pitch.value && prosody.setAttribute('pitch', pitchValue);
           prosody.textContent = synthesisText.value;
           voice.appendChild(prosody);
         } else {
@@ -527,7 +540,7 @@
         downloadButton.disabled = true;
 
         if (isSsml.checked) {
-          synthesizer.speakSsmlAsync(buildXml(),
+          synthesizer.speakSsmlAsync(generateSSML(),
                   complete_cb,
                   err_cb);
         } else {
@@ -600,7 +613,7 @@
         downloadButton.disabled = true;
 
         if (isSsml.checked) {
-          synthesizer.speakSsmlAsync(buildXml());
+          synthesizer.speakSsmlAsync(generateSSML(), function() {}, function() {});
         } else {
           synthesizer.speakTextAsync(synthesisText.value);
         }
