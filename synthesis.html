@@ -137,17 +137,28 @@
           (riff pcm, mp3, ogg and webm formats are supported for playback.)
         </td>
       </tr>
-      <tr style="display:none">
-        <td align="right"><label for="isSSML">Is SSML</label><br></td>
+      <tr>
+        <td align="right"><label for="isSSML">Is SSML</label></td>
         <td>
-          <input type="checkbox" id="isSSML" name="isSSML" value="ssml" checked="checked">
+          <input type="checkbox" id="isSSML" name="isSSML" value="ssml" checked="checked" onchange="onSSMLChanged()">
         </td>
       </tr>
       <tr>
         <td align="right"><label for="synthesisText">Text</label></td>
         <td>
-          <textarea id="synthesisText" style="display: inline-block;width:500px;height:100px"
-                 placeholder="Input text or ssml for synthesis."></textarea>
+          <textarea id="synthesisText" style="display: inline-block;width:500px;height:100px" placeholder="input text for synthesis. "></textarea>
+        </td>
+      </tr>
+      <tr id="rateRow">
+        <td align="right"><label for="synthesisOptions">Rate</label></td>
+        <td>
+          <input id="rate" type="text" placeholder="" style="width: 60px" value="+1%"> Any percentage with % (can be negative), e.g., +5%, -10%
+        </td>
+      </tr>
+      <tr id="pitchRow">
+        <td align="right">Pitch</td>
+        <td>
+          <input id="pitch" type="text" placeholder="" style="width: 60px" value="+1%"> Any percentage with % (can be negative), e.g., +5%, -10%
         </td>
       </tr>
       <tr>
@@ -260,7 +271,21 @@
       }
     }
 
+    function onSSMLChanged() {
+      let isSsmlElement = document.getElementById("isSSML");
+      if (isSsmlElement.checked) {
+        document.getElementById('pitchRow').style.display = '';
+        document.getElementById('rateRow').style.display = '';
+      } else {
+        document.getElementById('pitchRow').style.display = 'none';
+        document.getElementById('rateRow').style.display = 'none';
+      }
+    }
+    
+
     document.addEventListener("DOMContentLoaded", function () {
+      onSSMLChanged() 
+
       startSynthesisAsyncButton = document.getElementById("startSynthesisAsyncButton");
       updateVoiceListButton = document.getElementById("updateVoiceListButton");
       pauseButton = document.getElementById("pauseButton");
@@ -274,6 +299,46 @@
       isSsml = document.getElementById("isSSML");
       talkingHeadDiv = document.getElementById("talkingHeadDiv");
       highlightDiv = document.getElementById("highlightDiv");
+
+      function generateSSML() {
+        const rate  = document.getElementById("rate");
+        const pitch = document.getElementById("pitch");
+
+        const xmlDoc = document.implementation.createDocument("", "speak", null);
+        xmlDoc.documentElement.setAttribute('version', '1.0');
+        xmlDoc.documentElement.setAttribute('xmlns', 'https://www.w3.org/2001/10/synthesis');
+        xmlDoc.documentElement.setAttribute('xml:lang', 'en-US');
+        
+
+        const voice = xmlDoc.createElement('voice');
+        voice.setAttribute('name', voiceOptions.value);
+
+        let rateValue = rate.value;
+        let pitchValue = pitch.value;
+
+        if (rateValue || pitchValue) {
+          if (!rateValue.endsWith('%')) {
+            rateValue = rateValue + '%';
+          }
+          if (!pitchValue.endsWith('%')) {
+            pitchValue = pitchValue + '%';
+          }
+          const prosody = xmlDoc.createElement('prosody');
+          rate.value && prosody.setAttribute('rate', rateValue);
+          pitch.value && prosody.setAttribute('pitch', pitchValue);
+          prosody.textContent = synthesisText.value;
+          voice.appendChild(prosody);
+        } else {
+          voice.textContent = synthesisText.value;
+        }
+
+        xmlDoc.getElementsByTagName('speak')[0].appendChild(voice);
+
+        let xmlString = new XMLSerializer()
+            .serializeToString(xmlDoc);
+        console.log(xmlString)
+        return xmlString;
+      }
 
       setInterval(function () {
         if (player !== undefined) {
@@ -475,7 +540,7 @@
         downloadButton.disabled = true;
 
         if (isSsml.checked) {
-          synthesizer.speakSsmlAsync(synthesisText.value,
+          synthesizer.speakSsmlAsync(generateSSML(),
                   complete_cb,
                   err_cb);
         } else {
@@ -548,7 +613,14 @@
         downloadButton.disabled = true;
 
         if (isSsml.checked) {
-          synthesizer.speakSsmlAsync(synthesisText.value);
+          synthesizer.speakSsmlAsync(generateSSML(), function(result) {
+            // Handle the success case
+            console.log("Synthesis completed successfully:", result);
+          },
+          function(error) {
+            // Handle the error case  
+            console.error("Synthesis failed:", error);
+          });
         } else {
           synthesizer.speakTextAsync(synthesisText.value);
         }
